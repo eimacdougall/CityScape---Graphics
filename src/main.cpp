@@ -4,18 +4,18 @@
 #include "../wolf/wolf.h"
 #include "../samplefw/SampleRunner.h"
 
-#include "cube.h"
-#include "thirtyCubes.h"
+#include "city_buildings_gui.h"
+#include "city_buildings.h"
 
 class Week2: public wolf::App
 {
 public:
     Week2() : App("Week 4")
-    {
-        m_cube = new ThirtyCubesInstanced(this);
+    {   //Work on disconnecting from sampleRunner for more flexibility
+        m_cube = new CityBuildings(this);
         m_sampleRunner.addSample(m_cube);
     
-        m_gui = new CubeGUI(this);
+        m_gui = new CityBuildingsGUI(this);
         m_gui->setCubeRenderer(m_cube);
     }
 
@@ -47,8 +47,8 @@ public:
 private:
     SampleRunner m_sampleRunner;
     bool m_lastDown = false;
-    CubeGUI* m_gui;
-    ThirtyCubesInstanced* m_cube;
+    CityBuildingsGUI* m_gui;
+    CityBuildings* m_cube;
 };
 
 int main(int, char**) {
