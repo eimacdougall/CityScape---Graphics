@@ -2,12 +2,12 @@
 #include "../wolf/wolf.h"
 #include "../samplefw/Sample.h"
 #include "../samplefw/OrbitCamera.h"
+#include <random> 
 
 struct CityBlock {
-    glm::vec3 origin;   // World-space position of the block
-    int width;          // Buildings along X
-    int depth;          // Buildings along Z
-    int instanceCount;  // Number of building instances in this block
+    glm::vec3 origin;   // world-space position
+    int width;          // buildings along X
+    int depth;          // buildings along Z
 };
 
 class CityBuildings : public Sample {
@@ -21,22 +21,26 @@ public:
 
     GLuint getProgram() const { return m_program; }
 
-    // Global controls setters
-    void setSpacing(float s) { m_spacing = s; }
+    // Setters
+    void setSpacing(float s) { m_blockSpacing = s; }
     void setBuildingHeightRange(float minH, float maxH) { m_buildingScaleMin = minH; m_buildingScaleMax = maxH; }
-
-    void addBlock(const glm::vec3& origin, int width, int depth) {
-        m_blocks.push_back({origin, width, depth});
+    void setBuildingSizeRange(float minW, float maxW, float minD, float maxD) {
+        m_buildingWidthMin = minW; m_buildingWidthMax = maxW;
+        m_buildingDepthMin = minD; m_buildingDepthMax = maxD;
     }
 
-    void removeLastBlock() {
-        if (!m_blocks.empty())
-            m_blocks.pop_back();
+    void addBlock(const glm::vec3& origin, int width, int depth) { 
+        m_blocks.push_back({origin, width, depth}); 
     }
+    void removeLastBlock();
+    void clearBlocks();
 
-    void clearBlocks() {
-        m_blocks.clear();
-    }
+    //Grid-aware placement
+    void addBlockWithGridPlacement(int blockWidth, int blockDepth);
+    glm::vec3 computeBlockOffset(int blockIndex, int blockWidth, int blockDepth) const;
+
+    //Full city generation
+    void generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize);
 
 private:
     void createCubeGeometry();
@@ -48,17 +52,26 @@ private:
 
     OrbitCamera* m_pOrbitCam = nullptr;
 
-    // Cached uniform locations
+    //Uniform locations
     GLint m_uViewProjLoc = -1;
     GLint m_uSpacingLoc = -1;
     GLint m_uMinHeightLoc = -1;
     GLint m_uMaxHeightLoc = -1;
+    GLint m_uWidthMinLoc = -1;
+    GLint m_uWidthMaxLoc = -1;
+    GLint m_uDepthMinLoc = -1;
+    GLint m_uDepthMaxLoc = -1;
+    GLint m_uBlockOffsetLoc = -1;
+    GLint m_uGridWLoc = -1;
 
-    // Global control values
-    float m_spacing = 4.0f;
+    //Parameters
+    float m_blockSpacing = 10.0f; //Distance between blocks
     float m_buildingScaleMin = 2.0f;
     float m_buildingScaleMax = 12.0f;
+    float m_buildingWidthMin = 0.8f;
+    float m_buildingWidthMax = 1.2f;
+    float m_buildingDepthMin = 0.8f;
+    float m_buildingDepthMax = 1.2f;
 
-    std::vector<CityBlock> m_blocks; // List of blocks
-    int m_instanceCount = 0;
+    std::vector<CityBlock> m_blocks;
 };
