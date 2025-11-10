@@ -63,9 +63,11 @@ private:
     GLint m_uDepthMaxLoc = -1;
     GLint m_uBlockOffsetLoc = -1;
     GLint m_uGridWLoc = -1;
+    GLint m_uMinBuildingGapLoc = -1;
 
     //Parameters
     float m_blockSpacing = 10.0f; //Distance between blocks
+    float m_minBuildingGap = 1.0f; //Minimum gap between buildings in a block
     float m_buildingScaleMin = 2.0f;
     float m_buildingScaleMax = 12.0f;
     float m_buildingWidthMin = 0.8f;

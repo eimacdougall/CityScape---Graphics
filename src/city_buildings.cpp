@@ -29,6 +29,7 @@ void CityBuildings::init() {
     m_uDepthMaxLoc   = glGetUniformLocation(m_program, "u_buildingDepthMax");
     m_uBlockOffsetLoc= glGetUniformLocation(m_program, "u_blockOffset");
     m_uGridWLoc      = glGetUniformLocation(m_program, "u_gridW");
+    m_uMinBuildingGapLoc = glGetUniformLocation(m_program, "u_minBuildingGap");
 }
 
 //Handles the creation of cubes before they become buildings
@@ -97,6 +98,7 @@ void CityBuildings::render(int width, int height) {
         glUniform1f(m_uDepthMinLoc, m_buildingDepthMin);
         glUniform1f(m_uDepthMaxLoc, m_buildingDepthMax);
         glUniform1f(m_uGridWLoc, float(block.width));
+        glUniform1f(m_uMinBuildingGapLoc, m_minBuildingGap);
 
         int instanceCount = block.width * block.depth;
         glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, instanceCount);
