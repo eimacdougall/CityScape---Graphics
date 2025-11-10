@@ -74,23 +74,29 @@ void CityBuildings::render(int width, int height) {
     glViewport(0, 0, width, height);
     glEnable(GL_DEPTH_TEST);
     glDepthFunc(GL_LEQUAL);
-
     glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glUseProgram(m_program);
-
     glm::mat4 viewProj = m_pOrbitCam->getProjMatrix(width, height) * m_pOrbitCam->getViewMatrix();
-
-    // Use cached uniform locations
     glUniformMatrix4fv(m_uViewProjLoc, 1, GL_FALSE, &viewProj[0][0]);
     glUniform1f(m_uSpacingLoc, m_spacing);
     glUniform1f(m_uMinHeightLoc, m_buildingScaleMin);
     glUniform1f(m_uMaxHeightLoc, m_buildingScaleMax);
 
     glBindVertexArray(m_vao);
-    glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, m_instanceCount);
-    glBindVertexArray(0);
 
+    for (auto& block : m_blocks) {
+        // Send per-block uniforms to shader
+        glUniform3f(glGetUniformLocation(m_program, "u_blockOrigin"), 
+                    block.origin.x, block.origin.y, block.origin.z);
+        glUniform2i(glGetUniformLocation(m_program, "u_blockSize"),
+                    block.width, block.depth);
+
+        // Each block has width*depth instances
+        glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, block.width * block.depth);
+    }
+
+    glBindVertexArray(0);
     glUseProgram(0);
 }

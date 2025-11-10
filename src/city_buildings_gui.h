@@ -14,19 +14,22 @@ public:
     CityBuildingsGUI(wolf::App* app);
     ~CityBuildingsGUI();
 
+    void setCubeRenderer(CityBuildings* cube) { m_cubeRenderer = cube; }
+
     void update();
     void render();
-
-    void setCubeRenderer(CityBuildings* renderer) { 
-        m_cubeRenderer = renderer; 
-    }
 
 private:
     wolf::App* m_app = nullptr;
     CityBuildings* m_cubeRenderer = nullptr;
 
-    // GUI-controlled parameters
-    float m_spacing = 7.0f;
+    // Global uniforms
+    float m_spacing = 4.0f;
     float m_buildingScaleMin = 2.0f;
-    float m_buildingScaleMax = 14.0f;
+    float m_buildingScaleMax = 12.0f;
+
+    // Block controls
+    glm::vec3 m_newBlockOrigin = glm::vec3(0.0f);
+    int m_newBlockWidth = 4;
+    int m_newBlockDepth = 4;
 };

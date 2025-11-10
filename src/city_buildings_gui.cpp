@@ -1,6 +1,5 @@
 #include "city_buildings_gui.h"
 
-
 CityBuildingsGUI::CityBuildingsGUI(wolf::App* app)
     : m_app(app)
 {
@@ -23,12 +22,13 @@ CityBuildingsGUI::~CityBuildingsGUI() {
 }
 
 void CityBuildingsGUI::update() {
-    if (!m_cubeRenderer)
+    if (!m_cubeRenderer || !m_cubeRenderer->getProgram())
         return;
 
-    // Push the GUI values to the CityBuildings instance
-    m_cubeRenderer->setSpacing(m_spacing);
-    m_cubeRenderer->setBuildingHeightRange(m_buildingScaleMin, m_buildingScaleMax);
+    glUseProgram(m_cubeRenderer->getProgram());
+    glUniform1f(glGetUniformLocation(m_cubeRenderer->getProgram(), "u_spacing"), m_spacing);
+    glUniform1f(glGetUniformLocation(m_cubeRenderer->getProgram(), "u_buildingScaleMin"), m_buildingScaleMin);
+    glUniform1f(glGetUniformLocation(m_cubeRenderer->getProgram(), "u_buildingScaleMax"), m_buildingScaleMax);
 }
 
 void CityBuildingsGUI::render() {
@@ -40,16 +40,29 @@ void CityBuildingsGUI::render() {
 
     if (m_cubeRenderer) {
         ImGui::Text("Global Controls");
-
         ImGui::SliderFloat("Spacing", &m_spacing, 2.0f, 15.0f);
-        ImGui::SliderFloat("Min Building Height", &m_buildingScaleMin, 1.0f, 10.0f);
-        ImGui::SliderFloat("Max Building Height", &m_buildingScaleMax, 5.0f, 20.0f);
+        ImGui::SliderFloat("Min Height", &m_buildingScaleMin, 1.0f, 10.0f);
+        ImGui::SliderFloat("Max Height", &m_buildingScaleMax, 5.0f, 20.0f);
 
-        if (ImGui::Button("Reset Global")) {
-            m_spacing = 7.0f;
-            m_buildingScaleMin = 2.0f;
-            m_buildingScaleMax = 12.0f;
+        ImGui::Separator();
+        ImGui::Text("Add / Remove Blocks");
+
+        ImGui::InputFloat3("New Block Origin", &m_newBlockOrigin.x);
+        ImGui::SliderInt("Block Width", &m_newBlockWidth, 3, 5);
+        ImGui::SliderInt("Block Depth", &m_newBlockDepth, 3, 5);
+
+        if (ImGui::Button("Add Block")) {
+            m_cubeRenderer->addBlock(m_newBlockOrigin, m_newBlockWidth, m_newBlockDepth);
         }
+
+        if (ImGui::Button("Remove Last Block")) {
+            m_cubeRenderer->removeLastBlock();
+        }
+
+        if (ImGui::Button("Clear All Blocks")) {
+            m_cubeRenderer->clearBlocks();
+        }
+
     } else {
         ImGui::Text("No cube renderer connected!");
         ImGui::Text("Call setCubeRenderer() to enable controls.");
