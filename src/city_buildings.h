@@ -70,10 +70,11 @@ private:
     float m_minBuildingGap = 1.0f; //Minimum gap between buildings in a block
     float m_buildingScaleMin = 2.0f;
     float m_buildingScaleMax = 12.0f;
+
     float m_buildingWidthMin = 0.8f;
-    float m_buildingWidthMax = 1.2f;
+    float m_buildingWidthMax = 1.5f;
     float m_buildingDepthMin = 0.8f;
-    float m_buildingDepthMax = 1.2f;
+    float m_buildingDepthMax = 1.5f;
 
     std::vector<CityBlock> m_blocks;
 };

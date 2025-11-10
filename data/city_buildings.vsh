@@ -2,7 +2,7 @@ in vec3 a_position;
 
 uniform mat4 u_viewProj;
 
-// GUI uniforms
+//GUI uniforms
 uniform float u_spacing;
 uniform float u_buildingScaleMin;
 uniform float u_buildingScaleMax;
@@ -11,14 +11,24 @@ uniform float u_buildingWidthMax;
 uniform float u_buildingDepthMin;
 uniform float u_buildingDepthMax;
 
-// Block info
+//Block info
 uniform vec3 u_blockOffset;
 uniform float u_gridW;
 uniform float u_minBuildingGap;
 
 out vec4 v_color;
 
-float rand(float n) { return fract(sin(n) * 43758.5453); }
+//Hash-based pseudo-random generator
+float hash(vec3 p3) {
+    p3 = fract(p3 * 0.3183099 + vec3(0.1,0.2,0.3));
+    p3 += dot(p3, p3.yzx + 19.19);
+    return fract((p3.x + p3.y) * p3.z);
+}
+
+//Generates a stable random value using both instance ID and block offset
+float randID(int id, float seed) {
+    return hash(vec3(float(id) * 0.37, float(id) * seed, u_blockOffset.x + u_blockOffset.z));
+}
 
 void main() {
     int id = gl_InstanceID;
@@ -26,31 +36,38 @@ void main() {
     float x = mod(float(id), u_gridW);
     float z = floor(float(id) / u_gridW);
 
-    // Base grid spacing (adds guaranteed gap between buildings)
+    //Base grid spacing + guaranteed gap
     float baseSpacing = u_spacing + u_minBuildingGap;
 
-    // Randomized small jitter (% of gap between buildings)
-    float jitterRange = u_minBuildingGap * 0.50;
-    float offsetX = (x - u_gridW / 2.0) * baseSpacing + (rand(float(id)*0.37) - 0.5) * 2.0 * jitterRange;
-    float offsetZ = (z - u_gridW / 2.0) * baseSpacing + (rand(float(id)*0.71) - 0.5) * 2.0 * jitterRange;
+    //Jitter range
+    float jitterRange = u_minBuildingGap * 0.5;
 
-    // Randomized dimensions
-    float width  = u_buildingWidthMin + rand(float(id)*1.11)*(u_buildingWidthMax - u_buildingWidthMin);
-    float depth  = u_buildingDepthMin + rand(float(id)*1.31)*(u_buildingDepthMax - u_buildingDepthMin);
-    float height = u_buildingScaleMin + rand(float(id)*0.93)*(u_buildingScaleMax - u_buildingScaleMin);
+    //Use block-dependent randomness for offsets
+    float offsetX = (x - u_gridW / 2.0) * baseSpacing + (randID(id, 0.37) - 0.5) * 2.0 * jitterRange;
+    float offsetZ = (z - u_gridW / 2.0) * baseSpacing + (randID(id, 0.71) - 0.5) * 2.0 * jitterRange;
 
-    // Build local position
+    //Randomized building size and height (unique per block)
+    float width  = u_buildingWidthMin + randID(id, 1.11) * (u_buildingWidthMax - u_buildingWidthMin);
+    float depth  = u_buildingDepthMin + randID(id, 1.31) * (u_buildingDepthMax - u_buildingDepthMin);
+    float height = u_buildingScaleMin + randID(id, 0.93) * (u_buildingScaleMax - u_buildingScaleMin);
+
+    //Build position
     vec3 pos = a_position;
     pos.x *= width;
     pos.y = (pos.y + 0.5) * height;
     pos.z *= depth;
 
-    // Apply grid and noise offsets
+    //Apply offsets
     pos.x += offsetX + u_blockOffset.x;
     pos.z += offsetZ + u_blockOffset.z;
 
-    // Color variation
-    v_color = vec4(rand(float(id)*0.13), rand(float(id)*0.57), rand(float(id)*0.97), 1.0);
+    //Color based on position and instance for more variation
+    v_color = vec4(
+        0.4 + randID(id, 0.13) * 0.6,
+        0.3 + randID(id, 0.57) * 0.7,
+        0.5 + randID(id, 0.97) * 0.5,
+        1.0
+    );
 
     gl_Position = u_viewProj * vec4(pos, 1.0);
 }
