@@ -6,6 +6,7 @@
 
 #include "gui/city_buildings_gui.h"
 #include "city/city_buildings.h"
+#include "camera/fly_camera.h"
 
 class City : public wolf::App {
 public:
@@ -29,6 +30,11 @@ public:
         m_gui = new CityBuildingsGUI(this);
         m_gui->setCubeRenderer(m_city1);
 
+        //init
+        m_pOrbitCam = new OrbitCamera(this);
+        m_pOrbitCam->focusOn(glm::vec3(-50.0f, -20.0f, -50.0f),
+                          glm::vec3(50.0f, 20.0f, 50.0f));
+
         m_rDown = false;
     }
 
@@ -36,6 +42,7 @@ public:
         delete m_gui;
         delete m_city1;
         delete m_city2;
+        delete m_pOrbitCam;
         glDeleteProgram(m_cityShader);
     }
 
@@ -53,6 +60,7 @@ public:
         m_city1->update(dt);
         m_city2->update(dt);
         m_gui->update();
+        if (m_pOrbitCam) m_pOrbitCam->update(dt);
     }
 
     void render() override {
@@ -62,8 +70,10 @@ public:
         glClearColor(0.15f,0.15f,0.15f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        m_city1->render(m_width, m_height);
-        m_city2->render(m_width, m_height);
+        glm::mat4 viewProj = m_pOrbitCam->getProjMatrix(m_width, m_height) * m_pOrbitCam->getViewMatrix();
+
+        m_city1->render(viewProj);
+        m_city2->render(viewProj);
         m_gui->render();
     }
 
@@ -72,6 +82,8 @@ private:
     CityBuildings* m_city2;
     CityBuildingsGUI* m_gui;
     GLuint m_cityShader;
+
+    OrbitCamera* m_pOrbitCam = nullptr;
 
     bool m_rDown;
 

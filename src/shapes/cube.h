@@ -54,7 +54,7 @@ public:
     }
     
 private:
-    GLuint m_program = 0; // Can be shared across instances
+    GLuint m_program = 0; //Can be shared across instances
     GLuint m_vao = 0;
     GLuint m_vbo = 0;
     GLuint m_indexBuffer = 0;

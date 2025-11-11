@@ -12,8 +12,11 @@ std::vector<CityBlock> District::generateRandomCity(
 ) {
     std::vector<CityBlock> blocks;
 
+    //Set up random generators
     std::random_device rd;
     std::mt19937 gen(rd());
+    
+    //Pick values for city grid size and block sizes
     std::uniform_int_distribution<> gridDist(minGridSize, maxGridSize);
     std::uniform_int_distribution<> blockDist(minBlockSize, maxBlockSize);
 

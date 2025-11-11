@@ -14,7 +14,7 @@ public:
 
     void init();
     void update(float dt);
-    void render(int width, int height);
+    void render(const glm::mat4& viewProj);
 
     void removeLastBlock();
     void clearBlocks();
@@ -36,9 +36,7 @@ public:
 private:
     wolf::App* m_pApp = nullptr;
 
-    OrbitCamera* m_pOrbitCam = nullptr;
-
-    GLuint m_program = 0; // Can be shared across instances
+    GLuint m_program = 0; //Can be shared across instances
     Cube m_cube;
     District m_district;
 

@@ -2,14 +2,14 @@
 #include <vector>
 #include <random>
 #include "../wolf/wolf.h"
-#include "city_block.h"  // for CityBlock definition
+#include "city_block.h"
 
 class District {
 public:
     District() = default;
     ~District() = default;
 
-    // Generates a random set of city blocks for this district
+    //Generates a random set of city blocks for this district
     std::vector<CityBlock> generateRandomCity(
         int minGridSize,
         int maxGridSize,

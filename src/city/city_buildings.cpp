@@ -7,16 +7,9 @@ CityBuildings::~CityBuildings() {
     m_cube.cleanup();
     if (!m_program) //Only delete if this instance owns the program (shouldn't matter rn)
         glDeleteProgram(m_program);
-
-    delete m_pOrbitCam;
 }
 
 void CityBuildings::init() {
-    //Make Flycam an have that in main
-    m_pOrbitCam = new OrbitCamera(m_pApp);
-    m_pOrbitCam->focusOn(glm::vec3(-50.0f, -20.0f, -50.0f),
-                          glm::vec3(50.0f, 20.0f, 50.0f));
-
     m_cube.setProgram(m_program);
     m_cube.createCubeGeometry();
 
@@ -35,15 +28,12 @@ void CityBuildings::init() {
 }
 
 void CityBuildings::update(float dt) {
-    if (m_pOrbitCam) m_pOrbitCam->update(dt);
 }
 
-void CityBuildings::render(int width, int height) {
-    if (!m_program || !m_pOrbitCam) return;
+void CityBuildings::render(const glm::mat4& viewProj) {
+    if (!m_program) return;
 
     glUseProgram(m_program);
-
-    glm::mat4 viewProj = m_pOrbitCam->getProjMatrix(width, height) * m_pOrbitCam->getViewMatrix();
     glUniformMatrix4fv(m_uViewProjLoc, 1, GL_FALSE, &viewProj[0][0]);
 
     m_cube.bind();
@@ -69,6 +59,7 @@ void CityBuildings::render(int width, int height) {
     m_cube.unbind();
     glUseProgram(0);
 }
+
 
 void CityBuildings::removeLastBlock() {
     if (!m_blocks.empty()) m_blocks.pop_back();
