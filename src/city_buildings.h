@@ -3,6 +3,7 @@
 #include "../samplefw/Sample.h"
 #include "../samplefw/OrbitCamera.h"
 #include <random> 
+#include "cube.h"
 
 struct CityBlock {
     glm::vec3 origin; //World space position
@@ -37,16 +38,12 @@ public:
     GLuint getProgram() const { return m_program; }
 
 private:
-    void createCubeGeometry();
-
     wolf::App* m_pApp = nullptr;
 
     OrbitCamera* m_pOrbitCam = nullptr;
 
     GLuint m_program = 0; // Can be shared across instances
-    GLuint m_vao = 0;
-    GLuint m_vbo = 0;
-    GLuint m_indexBuffer = 0;
+    Cube m_cube;
 
     //Uniform locations
     GLint m_uViewProjLoc = -1;

@@ -4,10 +4,7 @@ CityBuildings::CityBuildings(wolf::App* pApp, GLuint sharedProgram)
     : m_pApp(pApp), m_program(sharedProgram) {}
 
 CityBuildings::~CityBuildings() {
-    glDeleteBuffers(1, &m_vbo);
-    glDeleteBuffers(1, &m_indexBuffer);
-    glDeleteVertexArrays(1, &m_vao);
-    
+    m_cube.cleanup();
     if (!m_program) //Only delete if this instance owns the program (shouldn't matter rn)
         glDeleteProgram(m_program);
 
@@ -20,7 +17,8 @@ void CityBuildings::init() {
     m_pOrbitCam->focusOn(glm::vec3(-50.0f, -20.0f, -50.0f),
                           glm::vec3(50.0f, 20.0f, 50.0f));
 
-    createCubeGeometry();
+    m_cube.setProgram(m_program);
+    m_cube.createCubeGeometry();
 
     //Cache uniform locations
     m_uViewProjLoc = glGetUniformLocation(m_program, "u_viewProj");
@@ -36,42 +34,6 @@ void CityBuildings::init() {
     m_uMinBuildingGapLoc = glGetUniformLocation(m_program, "u_minBuildingGap");
 }
 
-//Handles the creation of cubes before they become buildings
-void CityBuildings::createCubeGeometry() {
-    GLfloat vertices[] = {
-        -0.5f,-0.5f,-0.5f,  0.5f,-0.5f,-0.5f,  0.5f,0.5f,-0.5f,  -0.5f,0.5f,-0.5f,
-        -0.5f,-0.5f, 0.5f,  0.5f,-0.5f, 0.5f,  0.5f,0.5f, 0.5f,  -0.5f,0.5f, 0.5f
-    };
-
-    GLuint indices[] = {
-        0,1,2, 2,3,0,
-        4,5,6, 6,7,4,
-        0,1,5, 5,4,0,
-        6,7,3, 3,2,6,
-        1,2,6, 6,5,1,
-        0,3,7, 7,4,0
-    };
-
-    glGenVertexArrays(1, &m_vao);
-    glBindVertexArray(m_vao);
-
-    glGenBuffers(1, &m_vbo);
-    glBindBuffer(GL_ARRAY_BUFFER, m_vbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
-
-    glGenBuffers(1, &m_indexBuffer);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, m_indexBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
-
-    GLint posLoc = glGetAttribLocation(m_program, "a_position");
-    if (posLoc != -1) {
-        glEnableVertexAttribArray(posLoc);
-        glVertexAttribPointer(posLoc, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), 0);
-    }
-
-    glBindVertexArray(0);
-}
-
 void CityBuildings::update(float dt) {
     if (m_pOrbitCam) m_pOrbitCam->update(dt);
 }
@@ -84,7 +46,7 @@ void CityBuildings::render(int width, int height) {
     glm::mat4 viewProj = m_pOrbitCam->getProjMatrix(width, height) * m_pOrbitCam->getViewMatrix();
     glUniformMatrix4fv(m_uViewProjLoc, 1, GL_FALSE, &viewProj[0][0]);
 
-    glBindVertexArray(m_vao);
+    m_cube.bind();
 
     for (auto& block : m_blocks) {
         glm::vec3 blockPos = block.origin + m_cityOrigin;
@@ -104,7 +66,7 @@ void CityBuildings::render(int width, int height) {
         glDrawElementsInstanced(GL_TRIANGLES, 36, GL_UNSIGNED_INT, 0, instanceCount);
     }
 
-    glBindVertexArray(0);
+    m_cube.unbind();
     glUseProgram(0);
 }
 

@@ -44,8 +44,10 @@ void main() {
     float spacingX = u_buildingWidthMax + u_minBuildingGap;
     float spacingZ = u_buildingDepthMax + u_minBuildingGap;
 
-    float offsetX = (xIndex - u_gridW / 2.0) * spacingX + (randID(id, 0.37) - 0.5) * (u_minBuildingGap * 0.25);
-    float offsetZ = (zIndex - u_gridW / 2.0) * spacingZ + (randID(id, 0.71) - 0.5) * (u_minBuildingGap * 0.25);
+
+    float jitter = 0.4;
+    float offsetX = (xIndex - u_gridW / 2.0) * spacingX + (randID(id, 0.37) - 0.5) * (u_minBuildingGap * jitter);
+    float offsetZ = (zIndex - u_gridW / 2.0) * spacingZ + (randID(id, 0.71) - 0.5) * (u_minBuildingGap * jitter);
 
     //Apply per-vertex scaling
     vec3 pos = a_position;
