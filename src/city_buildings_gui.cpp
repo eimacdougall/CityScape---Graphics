@@ -48,27 +48,6 @@ void CityBuildingsGUI::render() {
         }
 
         ImGui::Separator();
-        ImGui::Text("Blocks");
-
-        //Start with 3x3 block
-        static int blockWidthInput = 3;
-        static int blockDepthInput = 3;
-        ImGui::InputInt("Block Width", &blockWidthInput);
-        ImGui::InputInt("Block Depth", &blockDepthInput);
-        if (blockWidthInput < 1) blockWidthInput = 1;
-        if (blockDepthInput < 1) blockDepthInput = 1;
-
-        if (ImGui::Button("Add Block")) {
-            m_cubeRenderer->addBlockWithGridPlacement(blockWidthInput, blockDepthInput);
-        }
-
-        if (ImGui::Button("Remove Last Block")) {
-            m_cubeRenderer->removeLastBlock();
-        }
-
-        if (ImGui::Button("Clear All Blocks")) {
-            m_cubeRenderer->clearBlocks();
-        }
 
     } else {
         ImGui::Text("No cube renderer connected!");
@@ -77,4 +56,4 @@ void CityBuildingsGUI::render() {
     ImGui::End();
     ImGui::Render();
     ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
-}
+} 

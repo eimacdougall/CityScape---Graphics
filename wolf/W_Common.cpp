@@ -56,7 +56,7 @@ bool CompileShader(GLuint* pShader, GLenum shaderType, const std::string& filena
 
 	const GLchar* sources[] = 
 	{
-		"#version 150\n",
+		"#version 330\n",
 		pSource
 	};
     *pShader = glCreateShader(shaderType);

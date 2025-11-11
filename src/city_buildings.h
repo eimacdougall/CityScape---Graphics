@@ -5,23 +5,28 @@
 #include <random> 
 
 struct CityBlock {
-    glm::vec3 origin;   // world-space position
-    int width;          // buildings along X
-    int depth;          // buildings along Z
+    glm::vec3 origin; //World space position
+    int width; //Buildings along X
+    int depth; //Buildings along Z
 };
 
-class CityBuildings : public Sample {
+class CityBuildings {
 public:
-    CityBuildings(wolf::App* pApp);
+    CityBuildings(wolf::App* pApp, GLuint sharedProgram = 0);
     ~CityBuildings();
 
-    void init() override;
-    void update(float dt) override;
-    void render(int width, int height) override;
+    void init();
+    void update(float dt);
+    void render(int width, int height);
 
-    GLuint getProgram() const { return m_program; }
+    void removeLastBlock();
+    void clearBlocks();
+    void generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize);
 
-    // Setters
+    //Setters
+    void setShaderProgram(GLuint program) { m_program = program; }
+    void setCityOrigin(const glm::vec3& origin) { m_cityOrigin = origin; }
+    void setMinBuildingGap(float gap) { m_minBuildingGap = gap; }
     void setSpacing(float s) { m_blockSpacing = s; }
     void setBuildingHeightRange(float minH, float maxH) { m_buildingScaleMin = minH; m_buildingScaleMax = maxH; }
     void setBuildingSizeRange(float minW, float maxW, float minD, float maxD) {
@@ -29,28 +34,19 @@ public:
         m_buildingDepthMin = minD; m_buildingDepthMax = maxD;
     }
 
-    void addBlock(const glm::vec3& origin, int width, int depth) { 
-        m_blocks.push_back({origin, width, depth}); 
-    }
-    void removeLastBlock();
-    void clearBlocks();
-
-    //Grid-aware placement
-    void addBlockWithGridPlacement(int blockWidth, int blockDepth);
-    glm::vec3 computeBlockOffset(int blockIndex, int blockWidth, int blockDepth) const;
-
-    //Full city generation
-    void generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize);
+    GLuint getProgram() const { return m_program; }
 
 private:
     void createCubeGeometry();
 
-    GLuint m_program = 0;
-    GLuint m_vbo = 0;
-    GLuint m_indexBuffer = 0;
-    GLuint m_vao = 0;
+    wolf::App* m_pApp = nullptr;
 
     OrbitCamera* m_pOrbitCam = nullptr;
+
+    GLuint m_program = 0; // Can be shared across instances
+    GLuint m_vao = 0;
+    GLuint m_vbo = 0;
+    GLuint m_indexBuffer = 0;
 
     //Uniform locations
     GLint m_uViewProjLoc = -1;
@@ -66,15 +62,16 @@ private:
     GLint m_uMinBuildingGapLoc = -1;
 
     //Parameters
-    float m_blockSpacing = 10.0f; //Distance between blocks
-    float m_minBuildingGap = 1.0f; //Minimum gap between buildings in a block
-    float m_buildingScaleMin = 2.0f;
-    float m_buildingScaleMax = 12.0f;
+    float m_blockSpacing = 1.0f; //Distance between blocks
+    float m_minBuildingGap = 2.5f; //Minimum gap between buildings in a block
+    float m_buildingScaleMin = 1.0f;
+    float m_buildingScaleMax = 5.0f;
 
-    float m_buildingWidthMin = 0.8f;
-    float m_buildingWidthMax = 1.5f;
-    float m_buildingDepthMin = 0.8f;
-    float m_buildingDepthMax = 1.5f;
+    float m_buildingWidthMin = 1.0f;
+    float m_buildingWidthMax = 3.0f;
+    float m_buildingDepthMin = 1.0f;
+    float m_buildingDepthMax = 3.0f;
 
     std::vector<CityBlock> m_blocks;
+    glm::vec3 m_cityOrigin = glm::vec3(0.0f);
 };
