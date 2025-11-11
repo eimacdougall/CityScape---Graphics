@@ -4,8 +4,8 @@
 #include "../wolf/wolf.h"
 #include "../samplefw/SampleRunner.h"
 
-#include "city_buildings_gui.h"
-#include "city_buildings.h"
+#include "gui/city_buildings_gui.h"
+#include "city/city_buildings.h"
 
 class City : public wolf::App {
 public:

@@ -3,13 +3,9 @@
 #include "../samplefw/Sample.h"
 #include "../samplefw/OrbitCamera.h"
 #include <random> 
-#include "cube.h"
-
-struct CityBlock {
-    glm::vec3 origin; //World space position
-    int width; //Buildings along X
-    int depth; //Buildings along Z
-};
+#include "../shapes/cube.h"
+#include "district.h"
+#include "city_block.h"
 
 class CityBuildings {
 public:
@@ -44,6 +40,7 @@ private:
 
     GLuint m_program = 0; // Can be shared across instances
     Cube m_cube;
+    District m_district;
 
     //Uniform locations
     GLint m_uViewProjLoc = -1;

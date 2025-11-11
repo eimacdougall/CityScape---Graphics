@@ -4,7 +4,7 @@
 #include "backends/imgui_impl_glfw.h"
 #include "backends/imgui_impl_opengl3.h"
 
-#include "city_buildings.h"
+#include "../city/city_buildings.h"
 
 //Forward declaration
 class CityBuildings;

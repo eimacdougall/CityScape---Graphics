@@ -79,40 +79,14 @@ void CityBuildings::clearBlocks() {
 }
 
 void CityBuildings::generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize) {
-    //Clear the city
-    m_blocks.clear();
-
-    //Set up random generators
-    std::random_device rd;
-    std::mt19937 gen(rd());
-
-    //Pick values for city grid size and block sizes
-    std::uniform_int_distribution<> gridDist(minGridSize, maxGridSize);
-    std::uniform_int_distribution<> blockDist(minBlockSize, maxBlockSize);
-
-    int gridX = gridDist(gen);
-    int gridZ = gridDist(gen);
-
-    for (int z = 0; z < gridZ; z++) {
-        for (int x = 0; x < gridX; x++) {
-            int blockWidth = blockDist(gen);
-            int blockDepth = blockDist(gen);
-
-            //Calculate origin so blocks are spaced by their size + gap
-            float blockSpacingX = blockWidth * m_buildingWidthMax + m_minBuildingGap * (blockWidth + 1);
-            float blockSpacingZ = blockDepth * m_buildingDepthMax + m_minBuildingGap * (blockDepth + 1);
-
-            glm::vec3 origin(
-                x * blockSpacingX,
-                0.0f,
-                z * blockSpacingZ
-            );
-
-            //Add city origin offset
-            origin += m_cityOrigin;
-
-
-            m_blocks.push_back({origin, blockWidth, blockDepth});
-        }
-    }
+    m_blocks = m_district.generateRandomCity(
+        minGridSize,
+        maxGridSize,
+        minBlockSize,
+        maxBlockSize,
+        m_buildingWidthMax,
+        m_buildingDepthMax,
+        m_minBuildingGap,
+        m_cityOrigin
+    );
 }
