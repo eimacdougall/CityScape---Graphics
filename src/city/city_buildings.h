@@ -25,12 +25,15 @@ public:
     void setCityOrigin(const glm::vec3& origin) { m_cityOrigin = origin; }
     void setMinBuildingGap(float gap) { m_minBuildingGap = gap; }
     void setSpacing(float s) { m_blockSpacing = s; }
+
+
     void setBuildingHeightRange(float minH, float maxH) { m_buildingScaleMin = minH; m_buildingScaleMax = maxH; }
     void setBuildingSizeRange(float minW, float maxW, float minD, float maxD) {
-        m_buildingWidthMin = minW; m_buildingWidthMax = maxW;
-        m_buildingDepthMin = minD; m_buildingDepthMax = maxD;
+        m_buildingWidthMin = minW;
+        m_buildingWidthMax = maxW;
+        m_buildingDepthMin = minD;
+        m_buildingDepthMax = maxD;
     }
-
     GLuint getProgram() const { return m_program; }
 
 private:

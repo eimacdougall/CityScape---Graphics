@@ -27,13 +27,11 @@ public:
         m_city1->generateRandomCity(minBlocks, maxBlocks, minBlockSize, maxBlockSize);
         m_city2->generateRandomCity(minBlocks, maxBlocks, minBlockSize, maxBlockSize);
 
+        m_pFlyCam = new FlyCamera(this);
+
         m_gui = new CityBuildingsGUI(this);
         m_gui->setCubeRenderer(m_city1);
-
-        //init
-        m_pOrbitCam = new OrbitCamera(this);
-        m_pOrbitCam->focusOn(glm::vec3(-50.0f, -20.0f, -50.0f),
-                          glm::vec3(50.0f, 20.0f, 50.0f));
+        m_gui->setCamera(m_pFlyCam); 
 
         m_rDown = false;
     }
@@ -42,7 +40,7 @@ public:
         delete m_gui;
         delete m_city1;
         delete m_city2;
-        delete m_pOrbitCam;
+        delete m_pFlyCam;
         glDeleteProgram(m_cityShader);
     }
 
@@ -57,10 +55,11 @@ public:
             m_rDown = false;
         }
 
+    if (m_pFlyCam) m_pFlyCam->update(dt);
+
         m_city1->update(dt);
         m_city2->update(dt);
         m_gui->update();
-        if (m_pOrbitCam) m_pOrbitCam->update(dt);
     }
 
     void render() override {
@@ -70,7 +69,7 @@ public:
         glClearColor(0.15f,0.15f,0.15f,1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        glm::mat4 viewProj = m_pOrbitCam->getProjMatrix(m_width, m_height) * m_pOrbitCam->getViewMatrix();
+        glm::mat4 viewProj = m_pFlyCam->getProjMatrix(m_width, m_height) * m_pFlyCam->getViewMatrix();
 
         m_city1->render(viewProj);
         m_city2->render(viewProj);
@@ -83,7 +82,7 @@ private:
     CityBuildingsGUI* m_gui;
     GLuint m_cityShader;
 
-    OrbitCamera* m_pOrbitCam = nullptr;
+    FlyCamera* m_pFlyCam = nullptr;
 
     bool m_rDown;
 
