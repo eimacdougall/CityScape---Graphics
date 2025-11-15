@@ -6,10 +6,11 @@
 #include "../shapes/cube.h"
 #include "district.h"
 #include "city_block.h"
+#include "sidewalk.h"
 
 class CityBuildings {
 public:
-    CityBuildings(wolf::App* pApp, GLuint sharedProgram = 0);
+    CityBuildings(wolf::App* pApp, GLuint sharedProgram, GLuint sidewalkShader);
     ~CityBuildings();
 
     void init();
@@ -20,30 +21,31 @@ public:
     void clearBlocks();
     void generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize);
 
-    //Setters
     void setShaderProgram(GLuint program) { m_program = program; }
     void setCityOrigin(const glm::vec3& origin) { m_cityOrigin = origin; }
     void setMinBuildingGap(float gap) { m_minBuildingGap = gap; }
-    void setSpacing(float s) { m_blockSpacing = s; }
-
-
     void setBuildingHeightRange(float minH, float maxH) { m_buildingScaleMin = minH; m_buildingScaleMax = maxH; }
     void setBuildingSizeRange(float minW, float maxW, float minD, float maxD) {
-        m_buildingWidthMin = minW;
-        m_buildingWidthMax = maxW;
-        m_buildingDepthMin = minD;
-        m_buildingDepthMax = maxD;
+        m_buildingWidthMin = minW; m_buildingWidthMax = maxW;
+        m_buildingDepthMin = minD; m_buildingDepthMax = maxD;
     }
+
+    //Getters
     GLuint getProgram() const { return m_program; }
+    Sidewalk& getSidewalk() { return m_sidewalk; }
+    const std::vector<CityBlock>& getBlocks() const { return m_blocks; }
 
 private:
     wolf::App* m_pApp = nullptr;
 
-    GLuint m_program = 0; //Can be shared across instances
+    GLuint m_program = 0;
+    GLuint m_sidewalkShader = 0;
+
     Cube m_cube;
     District m_district;
+    Sidewalk m_sidewalk;
 
-    //Uniform locations
+    //Uniforms
     GLint m_uViewProjLoc = -1;
     GLint m_uSpacingLoc = -1;
     GLint m_uMinHeightLoc = -1;
@@ -57,11 +59,9 @@ private:
     GLint m_uMinBuildingGapLoc = -1;
 
     //Parameters
-    float m_blockSpacing = 1.0f; //Distance between blocks
-    float m_minBuildingGap = 2.5f; //Minimum gap between buildings in a block
+    float m_minBuildingGap = 2.0f;
     float m_buildingScaleMin = 1.0f;
     float m_buildingScaleMax = 5.0f;
-
     float m_buildingWidthMin = 1.0f;
     float m_buildingWidthMax = 3.0f;
     float m_buildingDepthMin = 1.0f;

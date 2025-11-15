@@ -24,7 +24,6 @@ void CityBuildingsGUI::update() {
     if (!m_cubeRenderer || !m_cubeRenderer->getProgram())
         return;
 
-    m_cubeRenderer->setSpacing(m_blockSpacing);
     m_cubeRenderer->setMinBuildingGap(m_minBuildingGap);
     m_cubeRenderer->setBuildingHeightRange(m_buildingScaleMin, m_buildingScaleMax);
     m_cubeRenderer->setBuildingSizeRange(m_buildingWidthMin, m_buildingWidthMax,
@@ -39,7 +38,6 @@ void CityBuildingsGUI::render() {
     ImGui::Begin("City Controls");
 
     if (m_cubeRenderer) {
-        ImGui::SliderFloat("Block Spacing", &m_blockSpacing, 1.0f, 20.0f);
         ImGui::SliderFloat("Min Building Gap", &m_minBuildingGap, 0.5f, 10.0f);
 
         ImGui::SliderFloat("Min Height", &m_buildingScaleMin, 1.0f, 10.0f);

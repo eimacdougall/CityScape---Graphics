@@ -31,23 +31,27 @@ float randID(int id, float seed) {
 
 void main() {
     int id = gl_InstanceID;
+    int w = int(u_gridW);   //Cast to integer for correct indexing
 
-    float xIndex = mod(float(id), u_gridW);
-    float zIndex = floor(float(id) / u_gridW);
+    //Compute grid indices for this cube in the block
+    int xIndex = id % w;
+    int zIndex = id / w;
 
     //Randomized building size
     float width  = u_buildingWidthMin + randID(id, 1.11) * (u_buildingWidthMax - u_buildingWidthMin);
     float depth  = u_buildingDepthMin + randID(id, 1.31) * (u_buildingDepthMax - u_buildingDepthMin);
     float height = u_buildingScaleMin + randID(id, 0.93) * (u_buildingScaleMax - u_buildingScaleMin);
 
-    //Use block-dependent randomness for offsets
+    //Per cube spacing
     float spacingX = u_buildingWidthMax + u_minBuildingGap;
     float spacingZ = u_buildingDepthMax + u_minBuildingGap;
 
-
-    float jitter = 0.4;
-    float offsetX = (xIndex - u_gridW / 2.0) * spacingX + (randID(id, 0.37) - 0.5) * (u_minBuildingGap * jitter);
-    float offsetZ = (zIndex - u_gridW / 2.0) * spacingZ + (randID(id, 0.71) - 0.5) * (u_minBuildingGap * jitter);
+    //Optional jitter within safe bounds
+    float jitterFactor = 0.25;
+    float maxJitterX = width * jitterFactor;
+    float maxJitterZ = depth * jitterFactor;
+    float offsetX = float(xIndex) * spacingX + (randID(id, 0.37) - 0.5) * maxJitterX;
+    float offsetZ = float(zIndex) * spacingZ + (randID(id, 0.71) - 0.5) * maxJitterZ;
 
     //Apply per-vertex scaling
     vec3 pos = a_position;
@@ -55,7 +59,7 @@ void main() {
     pos.y = (pos.y + 0.5) * height;
     pos.z *= depth;
 
-    //Apply offsets
+    //Apply block origin offset
     pos.x += offsetX + u_blockOffset.x;
     pos.z += offsetZ + u_blockOffset.z;
 
