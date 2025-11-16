@@ -59,9 +59,9 @@ private:
     GLint m_uMinBuildingGapLoc = -1;
 
     //Parameters
-    float m_minBuildingGap = 2.0f;
-    float m_buildingScaleMin = 1.0f;
-    float m_buildingScaleMax = 5.0f;
+    float m_minBuildingGap = 2.1f;
+    float m_buildingScaleMin = 4.0f;
+    float m_buildingScaleMax = 10.0f;
     float m_buildingWidthMin = 1.0f;
     float m_buildingWidthMax = 3.0f;
     float m_buildingDepthMin = 1.0f;

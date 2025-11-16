@@ -40,7 +40,7 @@ void CityBuildingsGUI::render() {
     if (m_cubeRenderer) {
         ImGui::SliderFloat("Min Building Gap", &m_minBuildingGap, 0.5f, 10.0f);
 
-        ImGui::SliderFloat("Min Height", &m_buildingScaleMin, 1.0f, 10.0f);
+        ImGui::SliderFloat("Min Height", &m_buildingScaleMin, 1.0f, 20.0f);
         ImGui::SliderFloat("Max Height", &m_buildingScaleMax, 5.0f, 20.0f);
 
         ImGui::SliderFloat("Width Min", &m_buildingWidthMin, 1.0f, 5.0f);
@@ -61,7 +61,7 @@ void CityBuildingsGUI::render() {
 
         ImGui::SeparatorText("Camera Options");
         if (m_camera) {
-            ImGui::SliderFloat("Camera Speed", &m_cameraSpeed, 1.0f, 200.0f);
+            ImGui::SliderFloat("Camera Speed", &m_cameraSpeed, 1.0f, 1000.0f);
             m_camera->setSpeed(m_cameraSpeed);
         }
 

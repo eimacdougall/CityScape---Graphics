@@ -22,6 +22,7 @@ public:
 
     void createMesh(
         const CityBlock& block,
+        const glm::vec3& cityOrigin,
         float blockWidthWorld,
         float blockDepthWorld,
         float border,

@@ -28,9 +28,9 @@ private:
     FlyCamera* m_camera = nullptr;
 
     float m_blockSpacing = 1.0f; //Distance between blocks
-    float m_minBuildingGap = 2.5f; //Minimum gap between buildings in a block
-    float m_buildingScaleMin = 1.0f;
-    float m_buildingScaleMax = 5.0f;
+    float m_minBuildingGap = 2.1f; //Minimum gap between buildings in a block
+    float m_buildingScaleMin = 4.0f;
+    float m_buildingScaleMax = 10.0f;
 
     float m_buildingWidthMin = 1.0f;
     float m_buildingWidthMax = 3.0f;

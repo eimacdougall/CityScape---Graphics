@@ -86,7 +86,7 @@ void CityBuildings::generateRandomCity(int minGridSize, int maxGridSize, int min
         float blockDepthWorld  = block.depth  * m_buildingDepthMax  + (block.depth  - 1) * m_minBuildingGap;
 
         Sidewalk::SidewalkMesh mesh;
-        m_sidewalk.createMesh(block, blockWidthWorld, blockDepthWorld, 3.0f, mesh);
+        m_sidewalk.createMesh(block, m_cityOrigin, blockWidthWorld, blockDepthWorld, 3.0f, mesh);
         m_sidewalk.getMeshes().push_back(mesh);
     }
 }
