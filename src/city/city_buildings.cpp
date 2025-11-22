@@ -1,13 +1,16 @@
 #include "city_buildings.h"
+#include <iostream>
 
-CityBuildings::CityBuildings(wolf::App* pApp, GLuint sharedProgram, GLuint sidewalkShader)
-    : m_pApp(pApp), m_program(sharedProgram), m_sidewalkShader(sidewalkShader) {}
+CityBuildings::CityBuildings(wolf::App* pApp, GLuint sharedProgram, GLuint sidewalkShader, GLuint roadShader)
+    : m_pApp(pApp), m_program(sharedProgram), m_sidewalkShader(sidewalkShader), m_roadShader(roadShader) {}
 
 CityBuildings::~CityBuildings() {
     m_cube.cleanup();
     m_sidewalk.cleanup();
+    m_roadNetwork.cleanup();
     if (m_program) glDeleteProgram(m_program);
     if (m_sidewalkShader) glDeleteProgram(m_sidewalkShader);
+    if (m_roadShader) glDeleteProgram(m_roadShader);
 }
 
 void CityBuildings::init() {
@@ -26,6 +29,8 @@ void CityBuildings::init() {
     m_uBlockOffsetLoc = glGetUniformLocation(m_program, "u_blockOffset");
     m_uGridWLoc = glGetUniformLocation(m_program, "u_gridW");
     m_uMinBuildingGapLoc = glGetUniformLocation(m_program, "u_minBuildingGap");
+
+    m_roadNetwork.set_program(m_roadShader);
 }
 
 void CityBuildings::update(float dt) {
@@ -33,12 +38,20 @@ void CityBuildings::update(float dt) {
 
 void CityBuildings::render(const glm::mat4& viewProj) {
     //Render sidewalks
-    glUseProgram(m_sidewalkShader);
-    GLint uViewProjLoc = glGetUniformLocation(m_sidewalkShader, "u_viewProj");
-    GLint uColorLoc = glGetUniformLocation(m_sidewalkShader, "u_color");
-    glUniformMatrix4fv(uViewProjLoc, 1, GL_FALSE, &viewProj[0][0]);
-    glUniform4f(uColorLoc, 0.5f, 0.5f, 0.5f, 1.0f);
-    m_sidewalk.renderBlocks();
+    if (m_sidewalkShader) {
+        glUseProgram(m_sidewalkShader);
+        GLint uViewProjLoc = glGetUniformLocation(m_sidewalkShader, "u_viewProj");
+        GLint uColorLoc = glGetUniformLocation(m_sidewalkShader, "u_color");
+        if (uViewProjLoc >= 0) glUniformMatrix4fv(uViewProjLoc, 1, GL_FALSE, &viewProj[0][0]);
+        if (uColorLoc >= 0) glUniform4f(uColorLoc, 0.5f, 0.5f, 0.5f, 1.0f);
+        m_sidewalk.renderBlocks();
+    }
+
+    //Render roads
+    if (m_roadShader) {
+        glUseProgram(m_roadShader);
+    }
+    m_roadNetwork.render(viewProj);
 
     //Render buildings
     glUseProgram(m_program);
@@ -64,16 +77,7 @@ void CityBuildings::render(const glm::mat4& viewProj) {
     glUseProgram(0);
 }
 
-
-void CityBuildings::removeLastBlock() {
-    if (!m_blocks.empty()) m_blocks.pop_back();
-}
-
-void CityBuildings::clearBlocks() {
-    m_blocks.clear();
-}
-
-void CityBuildings::generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize) {
+std::vector<CityBlock> CityBuildings::generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize) {
     m_blocks = m_district.generateRandomCity(
         minGridSize, maxGridSize, minBlockSize, maxBlockSize,
         m_buildingWidthMax, m_buildingDepthMax, m_minBuildingGap, m_cityOrigin);
@@ -89,4 +93,37 @@ void CityBuildings::generateRandomCity(int minGridSize, int maxGridSize, int min
         m_sidewalk.createMesh(block, m_cityOrigin, blockWidthWorld, blockDepthWorld, 3.0f, mesh);
         m_sidewalk.getMeshes().push_back(mesh);
     }
+
+    //Compute bounds and pass them to road network
+    auto bounds = compute_building_bounds();
+
+    //Grid parameters
+    float cell_size = std::max(m_buildingWidthMax, m_buildingDepthMax) * 0.8f; //Cells slightly smaller than building footprint
+    int grid_w = 256;
+    int grid_h = 256;
+
+    //Build roads (A* connecting seeds drawn from block centers)
+    std::vector<glm::vec3> seeds;
+    for (auto &b : bounds) {
+        glm::vec3 center = (b.min + b.max) * 0.5f;
+        seeds.push_back(center);
+    }
+    //Let road_network auto-generate a few edge seeds too if seeds are empty but feed seeds above
+    m_roadNetwork.build_from_buildings(bounds, m_cityOrigin, cell_size, grid_w, grid_h, seeds);
+    m_roadNetwork.set_program(m_roadShader);
+
+    return m_blocks;
+}
+
+std::vector<BuildingBounds> CityBuildings::compute_building_bounds() const {
+    std::vector<BuildingBounds> bounds;
+    bounds.reserve(m_blocks.size());
+    for (auto &block : m_blocks) {
+        float widthWorld = block.width  * m_buildingWidthMax  + (block.width  - 1) * m_minBuildingGap;
+        float depthWorld = block.depth  * m_buildingDepthMax  + (block.depth  - 1) * m_minBuildingGap;
+        glm::vec3 min(block.origin.x + m_cityOrigin.x, 0.0f, block.origin.z + m_cityOrigin.z);
+        glm::vec3 max(min.x + widthWorld, 0.0f, min.z + depthWorld);
+        bounds.push_back({min, max});
+    }
+    return bounds;
 }

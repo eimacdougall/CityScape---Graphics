@@ -14,10 +14,12 @@ public:
         //Load shaders
         m_cityShader = wolf::LoadShaders("data/city_buildings.vsh", "data/city_buildings.fsh");
         m_sidewalkShader = wolf::LoadShaders("data/sidewalk.vsh", "data/sidewalk.fsh");
+        m_roadShader = wolf::LoadShaders("data/road.vsh", "data/road.fsh");
+
 
         //Create multiple city instances
-        m_city1 = new CityBuildings(this, m_cityShader, m_sidewalkShader);
-        m_city2 = new CityBuildings(this, m_cityShader, m_sidewalkShader);
+        m_city1 = new CityBuildings(this, m_cityShader, m_sidewalkShader, m_roadShader);
+        m_city2 = new CityBuildings(this, m_cityShader, m_sidewalkShader, m_roadShader);
 
         m_city1->init();
         m_city2->init();
@@ -47,6 +49,7 @@ public:
 
         glDeleteProgram(m_cityShader);
         glDeleteProgram(m_sidewalkShader);
+        glDeleteProgram(m_roadShader);
     }
 
     void update(float dt) override {
@@ -89,6 +92,7 @@ private:
 
     GLuint m_cityShader;
     GLuint m_sidewalkShader;
+    GLuint m_roadShader;
 
     bool m_rDown;
 

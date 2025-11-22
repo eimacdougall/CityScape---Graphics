@@ -1,16 +1,16 @@
 #pragma once
 #include "../wolf/wolf.h"
 #include "../samplefw/Sample.h"
-#include "../samplefw/OrbitCamera.h"
 #include <random> 
 #include "../shapes/cube.h"
 #include "district.h"
 #include "city_block.h"
 #include "sidewalk.h"
+#include "road.h"
 
 class CityBuildings {
 public:
-    CityBuildings(wolf::App* pApp, GLuint sharedProgram, GLuint sidewalkShader);
+    CityBuildings(wolf::App* pApp, GLuint sharedProgram, GLuint sidewalkShader, GLuint roadShader = 0);
     ~CityBuildings();
 
     void init();
@@ -19,7 +19,8 @@ public:
 
     void removeLastBlock();
     void clearBlocks();
-    void generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize);
+
+    std::vector<CityBlock> generateRandomCity(int minGridSize, int maxGridSize, int minBlockSize, int maxBlockSize);
 
     void setShaderProgram(GLuint program) { m_program = program; }
     void setCityOrigin(const glm::vec3& origin) { m_cityOrigin = origin; }
@@ -35,17 +36,21 @@ public:
     Sidewalk& getSidewalk() { return m_sidewalk; }
     const std::vector<CityBlock>& getBlocks() const { return m_blocks; }
 
+    //Compute CPU-side bounding boxes for the blocks
+    std::vector<BuildingBounds> compute_building_bounds() const;
+
 private:
     wolf::App* m_pApp = nullptr;
-
     GLuint m_program = 0;
     GLuint m_sidewalkShader = 0;
+    GLuint m_roadShader = 0;
 
     Cube m_cube;
-    District m_district;
     Sidewalk m_sidewalk;
+    District m_district;
+    RoadNetwork m_roadNetwork;
 
-    //Uniforms
+    // uniforms cached
     GLint m_uViewProjLoc = -1;
     GLint m_uSpacingLoc = -1;
     GLint m_uMinHeightLoc = -1;

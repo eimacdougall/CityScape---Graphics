@@ -6,3 +6,8 @@ struct CityBlock {
     int width;         // Buildings along X
     int depth;         // Buildings along Z
 };
+
+struct BuildingBounds {
+    glm::vec3 min;
+    glm::vec3 max;
+};
