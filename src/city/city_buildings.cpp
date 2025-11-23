@@ -36,7 +36,7 @@ void CityBuildings::init() {
 void CityBuildings::update(float dt) {
 }
 
-void CityBuildings::render(const glm::mat4& viewProj) {
+void CityBuildings::render(const glm::mat4& viewProj, const glm::vec3& cameraPos, float maxDistance) {
     //Render sidewalks
     if (m_sidewalkShader) {
         glUseProgram(m_sidewalkShader);
@@ -51,7 +51,7 @@ void CityBuildings::render(const glm::mat4& viewProj) {
     if (m_roadShader) {
         glUseProgram(m_roadShader);
     }
-    m_roadNetwork.render(viewProj);
+    m_roadNetwork.render(viewProj, cameraPos, maxDistance);
 
     //Render buildings
     glUseProgram(m_program);

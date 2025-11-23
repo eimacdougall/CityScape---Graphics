@@ -7,6 +7,7 @@
 #include "gui/city_buildings_gui.h"
 #include "city/city_buildings.h"
 #include "camera/fly_camera.h"
+#include "city/road/road.h"
 
 class City : public wolf::App {
 public:
@@ -15,7 +16,6 @@ public:
         m_cityShader = wolf::LoadShaders("data/city_buildings.vsh", "data/city_buildings.fsh");
         m_sidewalkShader = wolf::LoadShaders("data/sidewalk.vsh", "data/sidewalk.fsh");
         m_roadShader = wolf::LoadShaders("data/road.vsh", "data/road.fsh");
-
 
         //Create multiple city instances
         m_city1 = new CityBuildings(this, m_cityShader, m_sidewalkShader, m_roadShader);
@@ -78,8 +78,9 @@ public:
         glm::mat4 viewProj = m_pFlyCam->getProjMatrix(m_width, m_height) * m_pFlyCam->getViewMatrix();
 
         //Render cities
-        m_city1->render(viewProj);
-        m_city2->render(viewProj);
+        float maxDistance = 500.0f;
+        m_city1->render(viewProj, m_pFlyCam->getPosition(), maxDistance);
+        m_city2->render(viewProj, m_pFlyCam->getPosition(), maxDistance);
 
         m_gui->render();
     }

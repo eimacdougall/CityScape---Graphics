@@ -12,7 +12,7 @@ public:
 
     void cleanup();
     void set_program(GLuint program);
-    void render(const glm::mat4& view_proj);
+    void RoadNetwork::render(const glm::mat4& view_proj, const glm::vec3& camera_pos, float max_distance);
 
     void build_from_buildings(
         const std::vector<BuildingBounds>& bounds,
@@ -40,6 +40,8 @@ private:
     GLuint m_program = 0;
     GLint m_uViewProjLoc = -1;
     GLuint m_uColorLoc = -1;
+    GLuint m_uCameraPosLoc = -1;
+    GLuint m_uMaxDistLoc = -1;
 
     //Grid
     enum class CellType : uint8_t { Empty = 0, Building = 1, Road = 2 };

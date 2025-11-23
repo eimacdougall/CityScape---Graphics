@@ -24,6 +24,8 @@ void RoadNetwork::set_program(GLuint program) {
         glUseProgram(m_program);
         m_uViewProjLoc = glGetUniformLocation(m_program, "u_viewProj");
         m_uColorLoc = glGetUniformLocation(m_program, "u_color");
+        m_uCameraPosLoc = glGetUniformLocation(m_program, "uCameraPos");
+        m_uMaxDistLoc   = glGetUniformLocation(m_program, "uMaxDist");
         glUseProgram(0);
     } else {
         m_uViewProjLoc = -1;
@@ -31,15 +33,22 @@ void RoadNetwork::set_program(GLuint program) {
     }
 }
 
-void RoadNetwork::render(const glm::mat4& view_proj) {
+void RoadNetwork::render(const glm::mat4& view_proj, const glm::vec3& camera_pos, float max_distance) {
     glUseProgram(m_program);
-    if (m_uViewProjLoc >= 0) glUniformMatrix4fv(m_uViewProjLoc, 1, GL_FALSE, &view_proj[0][0]);
-    if(m_uColorLoc >= 0) glUniform3f(m_uColorLoc, 0.0f, 0.0f, 0.0f);
 
+    if (m_uViewProjLoc >= 0)
+        glUniformMatrix4fv(m_uViewProjLoc, 1, GL_FALSE, &view_proj[0][0]);
+    if (m_uColorLoc >= 0)
+        glUniform3f(m_uColorLoc, 0.0f, 0.0f, 0.0f);
+    if (m_uCameraPosLoc >= 0)
+        glUniform3f(m_uCameraPosLoc, camera_pos.x, camera_pos.y, camera_pos.z);
+    if (m_uMaxDistLoc >= 0)
+        glUniform1f(m_uMaxDistLoc, max_distance);
     for (auto &m : m_meshes) {
         glBindVertexArray(m.vao);
         glDrawElements(GL_TRIANGLES, m.index_count, GL_UNSIGNED_INT, 0);
     }
+
     glBindVertexArray(0);
     glUseProgram(0);
 }

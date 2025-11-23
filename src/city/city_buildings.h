@@ -15,7 +15,7 @@ public:
 
     void init();
     void update(float dt);
-    void render(const glm::mat4& viewProj);
+    void CityBuildings::render(const glm::mat4& viewProj, const glm::vec3& cameraPos, float maxDistance);
 
     void removeLastBlock();
     void clearBlocks();
