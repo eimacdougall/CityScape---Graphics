@@ -27,7 +27,9 @@ public:
         int grid_h,
         const std::vector<glm::vec3>& seeds = {}
     );
-
+        
+    void RoadNetwork::addSeedsFromBlocks(const std::vector<BuildingBounds>& bounds);
+    void RoadNetwork::addSeedToGrid(float worldX, float worldZ);
 private:
     struct RoadMesh {
         GLuint vao = 0;
@@ -47,10 +49,10 @@ private:
     float m_cellSize = 1.0f;
     glm::vec3 m_cityOrigin{0.0f,0.0f,0.0f};
     std::vector<CellType> m_grid;
+    std::vector<glm::ivec2> m_extraSeeds;
 
     //Road meshes
     std::vector<RoadMesh> m_meshes;
-    bool m_debug = false;
 
 private:
     inline bool in_bounds(int x, int y) const { return x >= 0 && y >= 0 && x < m_gridW && y < m_gridH; }

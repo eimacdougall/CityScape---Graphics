@@ -35,9 +35,11 @@ public:
     GLuint getProgram() const { return m_program; }
     Sidewalk& getSidewalk() { return m_sidewalk; }
     const std::vector<CityBlock>& getBlocks() const { return m_blocks; }
+    float CityBuildings::getSidewalkBorder() const { return m_sidewalk.getBorder(); }
 
     //Compute CPU-side bounding boxes for the blocks
     std::vector<BuildingBounds> compute_building_bounds() const;
+    std::vector<BuildingBounds> compute_sidewalk_bounds() const;
 
 private:
     wolf::App* m_pApp = nullptr;

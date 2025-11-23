@@ -18,9 +18,9 @@ void Sidewalk::createMesh(
     const glm::vec3& cityOrigin,
     float blockWidthWorld,
     float blockDepthWorld,
-    float border,
     SidewalkMesh& mesh)
 {
+    float border = m_sidewalkBorder;
     float yTop = 0.0f;
     float curbHeight = 0.2f;
     float yBottom = yTop - curbHeight;

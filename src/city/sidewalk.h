@@ -19,13 +19,13 @@ public:
     void setProgram(GLuint program) { m_program = program; }
     GLuint getProgram() const { return m_program; }
     std::vector<SidewalkMesh>& getMeshes() { return m_meshes; }
+    float getBorder() const { return m_sidewalkBorder; }
 
     void createMesh(
         const CityBlock& block,
         const glm::vec3& cityOrigin,
         float blockWidthWorld,
         float blockDepthWorld,
-        float border,
         SidewalkMesh& mesh);
 
     void renderBlocks();
@@ -34,4 +34,5 @@ public:
 private:
     std::vector<SidewalkMesh> m_meshes;
     GLuint m_program = 0;
+    float m_sidewalkBorder = 3.0f;
 };

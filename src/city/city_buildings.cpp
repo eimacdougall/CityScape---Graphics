@@ -90,17 +90,17 @@ std::vector<CityBlock> CityBuildings::generateRandomCity(int minGridSize, int ma
         float blockDepthWorld  = block.depth  * m_buildingDepthMax  + (block.depth  - 1) * m_minBuildingGap;
 
         Sidewalk::SidewalkMesh mesh;
-        m_sidewalk.createMesh(block, m_cityOrigin, blockWidthWorld, blockDepthWorld, 3.0f, mesh);
+        m_sidewalk.createMesh(block, m_cityOrigin, blockWidthWorld, blockDepthWorld, mesh);
         m_sidewalk.getMeshes().push_back(mesh);
     }
 
     //Compute bounds and pass them to road network
-    auto bounds = compute_building_bounds();
+    auto bounds = compute_sidewalk_bounds();
 
     //Grid parameters
-    float cell_size = std::max(m_buildingWidthMax, m_buildingDepthMax) * 0.8f; //Cells slightly smaller than building footprint
-    int grid_w = 256;
-    int grid_h = 256;
+    float cell_size = std::max(m_buildingWidthMax, m_buildingDepthMax) * 0.99f; //Cells slightly smaller than building footprint
+    int grid_w = 512;
+    int grid_h = 512;
 
     //Build roads (A* connecting seeds drawn from block centers)
     std::vector<glm::vec3> seeds;
@@ -126,4 +126,30 @@ std::vector<BuildingBounds> CityBuildings::compute_building_bounds() const {
         bounds.push_back({min, max});
     }
     return bounds;
+}
+
+std::vector<BuildingBounds> CityBuildings::compute_sidewalk_bounds() const {
+    float border = getSidewalkBorder();
+
+    std::vector<BuildingBounds> sidewalkBounds;
+    sidewalkBounds.reserve(m_blocks.size());
+
+    for (auto &block : m_blocks) {
+        float blockWidthWorld = block.width  * m_buildingWidthMax
+                              + (block.width - 1) * m_minBuildingGap;
+
+        float blockDepthWorld = block.depth  * m_buildingDepthMax
+                              + (block.depth - 1) * m_minBuildingGap;
+
+        glm::vec3 min(block.origin.x + m_cityOrigin.x - border,
+                      0.0f,
+                      block.origin.z + m_cityOrigin.z - border);
+
+        glm::vec3 max(block.origin.x + m_cityOrigin.x + blockWidthWorld + border,
+                      0.0f,
+                      block.origin.z + m_cityOrigin.z + blockDepthWorld + border);
+
+        sidewalkBounds.push_back({min, max});
+    }
+    return sidewalkBounds;
 }

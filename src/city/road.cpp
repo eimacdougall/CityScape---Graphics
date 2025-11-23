@@ -40,7 +40,6 @@ void RoadNetwork::build_from_buildings(
     int grid_h,
     const std::vector<glm::vec3>& seeds
 ) {
-    //Clear old
     cleanup();
     m_cityOrigin = city_origin;
     m_cellSize = cell_size;
@@ -48,80 +47,173 @@ void RoadNetwork::build_from_buildings(
     m_gridH = grid_h;
     m_grid.assign(grid_w * grid_h, CellType::Empty);
 
-    //Mark building-occupied cells
+    // Mark buildings as blocked
     mark_buildings_as_blocked(bounds);
 
-    //Seed cells, convert seeds to cell coords
     std::vector<glm::ivec2> seed_cells;
-    if (!seeds.empty()) {
-        mark_seed_cells(seeds, seed_cells);
-    } else {
-        //Auto generate seeds: pick cell centers near each building + border points
-        //Heuristic for A*, for each building bounds push its center
-        std::vector<glm::vec3> auto_seeds;
-        for (auto &b : bounds) {
-            glm::vec3 center = (b.min + b.max) * 0.5f;
-            auto_seeds.push_back(center);
-        }
-        //Also add a few edge seeds (grid corners)
-        auto_seeds.push_back(m_cityOrigin + glm::vec3(0.0f, 0.0f, 0.0f));
-        auto_seeds.push_back(m_cityOrigin + glm::vec3((m_gridW-1) * m_cellSize, 0.0f, 0.0f));
-        auto_seeds.push_back(m_cityOrigin + glm::vec3(0.0f, 0.0f, (m_gridH-1) * m_cellSize));
-        auto_seeds.push_back(m_cityOrigin + glm::vec3((m_gridW-1) * m_cellSize, 0.0f, (m_gridH-1) * m_cellSize));
+    mark_seed_cells(seeds, seed_cells);
 
-        mark_seed_cells(auto_seeds, seed_cells);
-    }
+    // Add corner and mid-edge seeds per block
+    addSeedsFromBlocks(bounds);
+    seed_cells.insert(seed_cells.end(), m_extraSeeds.begin(), m_extraSeeds.end());
 
-    //If fewer than 2 seeds, nothing to connect.
-    if (seed_cells.size() < 2) {
-        //No seeds then no road mesh
-        return;
-    }
+    if (seed_cells.size() < 2) return;
 
-    //Build pairwise A* paths between seeds (simple spanning, connect in sequence)
+    // --- MST connection: always connect nearest unconnected seed ---
     std::vector<std::vector<glm::ivec2>> all_paths;
-    //MST like connection, connect every seed to the nearest already-connected seed
     std::vector<bool> connected(seed_cells.size(), false);
     connected[0] = true;
     std::vector<int> connected_ids = {0};
 
-    while (true) {
-        int best_from = -1;
-        int best_to = -1;
+    while (connected_ids.size() < seed_cells.size()) {
         float best_dist = std::numeric_limits<float>::infinity();
-        for (int i = 0; i < (int)seed_cells.size(); ++i) {
-            if (connected[i]) continue;
-            //Find nearest connected
-            for (int c : connected_ids) {
-                glm::vec2 a(seed_cells[i].x, seed_cells[i].y);
-                glm::vec2 b(seed_cells[c].x, seed_cells[c].y);
-                float d = glm::distance(a,b);
+        int best_from = -1, best_to = -1;
+
+        // Find nearest pair (connected -> unconnected)
+        for (int c_idx : connected_ids) {
+            glm::ivec2 c = seed_cells[c_idx];
+            for (size_t i = 0; i < seed_cells.size(); ++i) {
+                if (connected[i]) continue;
+                glm::ivec2 u = seed_cells[i];
+                float d = glm::distance(glm::vec2(c.x, c.y), glm::vec2(u.x, u.y));
                 if (d < best_dist) {
                     best_dist = d;
-                    best_from = c;
-                    best_to = i;
+                    best_from = c_idx;
+                    best_to = (int)i;
                 }
             }
         }
-        if (best_to == -1) break;
-        //Find path from best_from to best_to
+
+        if (best_from == -1 || best_to == -1) break;
+
+        // Connect best pair
         auto path = find_path_astar(seed_cells[best_from], seed_cells[best_to]);
-        if (!path.empty()) {
-            all_paths.push_back(path);
-        }
+        if (!path.empty()) all_paths.push_back(path);
+
         connected[best_to] = true;
         connected_ids.push_back(best_to);
-        //Done when all connected
-        bool all = true;
-        for (bool v : connected) if (!v) { all = false; break; }
-        if (all) break;
     }
 
-    //Rasterize paths into road cells
     rasterize_paths_to_roads(all_paths);
+    create_meshes_from_roads(3.5f);
+}
+/*void RoadNetwork::addSeedsFromBlocks(const std::vector<BuildingBounds>& bounds) {
+    m_extraSeeds.clear();
 
-    //Create meshes
-    create_meshes_from_roads(/*road width*/ 3.5f);
+    for (size_t i = 0; i < bounds.size(); ++i) {
+        auto &b = bounds[i];
+
+        // Corners
+        glm::vec3 corners[4] = {
+            {b.min.x, 0.0f, b.min.z},
+            {b.max.x, 0.0f, b.min.z},
+            {b.max.x, 0.0f, b.max.z},
+            {b.min.x, 0.0f, b.max.z}
+        };
+        for (auto &c : corners) {
+            int cx = int((c.x - m_cityOrigin.x) / m_cellSize + 0.5f);
+            int cz = int((c.z - m_cityOrigin.z) / m_cellSize + 0.5f);
+            if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                m_extraSeeds.push_back(glm::ivec2(cx, cz));
+        }
+
+        // Mid-edges
+        glm::vec3 mid_edges[4] = {
+            {(b.min.x + b.max.x) * 0.5f, 0.0f, b.min.z}, // top
+            {(b.min.x + b.max.x) * 0.5f, 0.0f, b.max.z}, // bottom
+            {b.min.x, 0.0f, (b.min.z + b.max.z) * 0.5f}, // left
+            {b.max.x, 0.0f, (b.min.z + b.max.z) * 0.5f}  // right
+        };
+        for (auto &m : mid_edges) {
+            int cx = int((m.x - m_cityOrigin.x) / m_cellSize + 0.5f);
+            int cz = int((m.z - m_cityOrigin.z) / m_cellSize + 0.5f);
+            if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                m_extraSeeds.push_back(glm::ivec2(cx, cz));
+        }
+
+        // --- Diagonal / neighbor connections ---
+        for (size_t j = 0; j < bounds.size(); ++j) {
+            if (i == j) continue;
+            auto &n = bounds[j];
+
+            // Check if neighboring block (touching sides)
+            bool neighborX = (b.max.x >= n.min.x - m_cellSize && b.min.x <= n.max.x + m_cellSize);
+            bool neighborZ = (b.max.z >= n.min.z - m_cellSize && b.min.z <= n.max.z + m_cellSize);
+
+            if (neighborX) {
+                // Horizontal neighbor: add mid-edge vertical seeds
+                float midZ = (std::max(b.min.z, n.min.z) + std::min(b.max.z, n.max.z)) * 0.5f;
+                int cx = int((b.max.x - m_cityOrigin.x) / m_cellSize + 0.5f); // right edge
+                int cz = int((midZ - m_cityOrigin.z) / m_cellSize + 0.5f);
+                if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                    m_extraSeeds.push_back(glm::ivec2(cx, cz));
+
+                cx = int((b.min.x - m_cityOrigin.x) / m_cellSize + 0.5f); // left edge
+                if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                    m_extraSeeds.push_back(glm::ivec2(cx, cz));
+            }
+
+            if (neighborZ) {
+                // Vertical neighbor: add mid-edge horizontal seeds
+                float midX = (std::max(b.min.x, n.min.x) + std::min(b.max.x, n.max.x)) * 0.5f;
+                int cz = int((b.max.z - m_cityOrigin.z) / m_cellSize + 0.5f); // bottom edge
+                int cx = int((midX - m_cityOrigin.x) / m_cellSize + 0.5f);
+                if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                    m_extraSeeds.push_back(glm::ivec2(cx, cz));
+
+                cz = int((b.min.z - m_cityOrigin.z) / m_cellSize + 0.5f); // top edge
+                if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                    m_extraSeeds.push_back(glm::ivec2(cx, cz));
+            }
+        }
+    }
+}*/
+void RoadNetwork::addSeedsFromBlocks(const std::vector<BuildingBounds>& bounds) {
+    m_extraSeeds.clear();
+
+    for (auto &b : bounds) {
+        // Corners
+        glm::vec3 corners[4] = {
+            {b.min.x, 0.0f, b.min.z},
+            {b.max.x, 0.0f, b.min.z},
+            {b.max.x, 0.0f, b.max.z},
+            {b.min.x, 0.0f, b.max.z}
+        };
+
+        for (auto &c : corners) {
+            int cx = int((c.x - m_cityOrigin.x) / m_cellSize + 0.5f);
+            int cz = int((c.z - m_cityOrigin.z) / m_cellSize + 0.5f);
+            if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                m_extraSeeds.push_back(glm::ivec2(cx, cz));
+        }
+
+        // Mid-edge seeds
+        glm::vec3 mid_edges[4] = {
+            {(b.min.x + b.max.x) * 0.5f, 0.0f, b.min.z}, // top
+            {(b.min.x + b.max.x) * 0.5f, 0.0f, b.max.z}, // bottom
+            {b.min.x, 0.0f, (b.min.z + b.max.z) * 0.5f}, // left
+            {b.max.x, 0.0f, (b.min.z + b.max.z) * 0.5f}  // right
+        };
+
+        for (auto &m : mid_edges) {
+            int cx = int((m.x - m_cityOrigin.x) / m_cellSize + 0.5f);
+            int cz = int((m.z - m_cityOrigin.z) / m_cellSize + 0.5f);
+            if (in_bounds(cx, cz) && m_grid[idx(cx, cz)] == CellType::Empty)
+                m_extraSeeds.push_back(glm::ivec2(cx, cz));
+        }
+    }
+}
+
+// Helper function
+void RoadNetwork::addSeedToGrid(float worldX, float worldZ) {
+    int cx = static_cast<int>(std::round((worldX - m_cityOrigin.x) / m_cellSize));
+    int cz = static_cast<int>(std::round((worldZ - m_cityOrigin.z) / m_cellSize));
+
+    if (cx >= 0 && cx < m_gridW && cz >= 0 && cz < m_gridH) {
+        if (m_grid[idx(cx, cz)] == CellType::Empty) {
+            m_extraSeeds.push_back(glm::ivec2(cx, cz));
+        }
+    }
 }
 
 void RoadNetwork::mark_buildings_as_blocked(const std::vector<BuildingBounds>& bounds) {
