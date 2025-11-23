@@ -6,7 +6,7 @@
 #include "district.h"
 #include "city_block.h"
 #include "sidewalk.h"
-#include "road.h"
+#include "road/road.h"
 
 class CityBuildings {
 public:

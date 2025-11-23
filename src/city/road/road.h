@@ -1,6 +1,6 @@
 #pragma once
 #include "../wolf/wolf.h"
-#include "city_block.h"
+#include "../city_block.h"
 #include "pq_item.h"
 #include <queue>
 #include <unordered_map>
@@ -14,11 +14,6 @@ public:
     void set_program(GLuint program);
     void render(const glm::mat4& view_proj);
 
-    //Build roads using A* pathfinding on a grid.
-    //city_origin: same origin used to place blocks/buildings so coordinates align.
-    //cell_size: size of each grid cell in world units.
-    //grid_w, grid_h: grid dimensions (number of cells in X and Z)
-    //Seeds are an optional list of world-space points to connect (e.g., block centers). If empty, will auto-generate connection seeds.
     void build_from_buildings(
         const std::vector<BuildingBounds>& bounds,
         const glm::vec3& city_origin,
@@ -27,9 +22,7 @@ public:
         int grid_h,
         const std::vector<glm::vec3>& seeds = {}
     );
-        
-    void RoadNetwork::addSeedsFromBlocks(const std::vector<BuildingBounds>& bounds);
-    void RoadNetwork::addSeedToGrid(float worldX, float worldZ);
+
 private:
     struct RoadMesh {
         GLuint vao = 0;
@@ -38,12 +31,18 @@ private:
         GLsizei index_count = 0;
     };
 
+    struct MSTEdge {
+        int from_idx;
+        int to_idx;
+        std::vector<glm::ivec2> path;
+    };
+
     GLuint m_program = 0;
     GLint m_uViewProjLoc = -1;
     GLuint m_uColorLoc = -1;
 
     //Grid
-    enum class CellType : uint8_t { Empty=0, Building=1, Road=2 };
+    enum class CellType : uint8_t { Empty = 0, Building = 1, Road = 2 };
     int m_gridW = 0;
     int m_gridH = 0;
     float m_cellSize = 1.0f;
@@ -58,12 +57,21 @@ private:
     inline bool in_bounds(int x, int y) const { return x >= 0 && y >= 0 && x < m_gridW && y < m_gridH; }
     inline int idx(int x, int y) const { return y * m_gridW + x; }
 
-    void mark_buildings_as_blocked(const std::vector<BuildingBounds>& bounds);
+    //Helpers
+    void RoadNetwork::mark_buildings_as_blocked(const std::vector<BuildingBounds>& bounds, int buffer);
     void mark_seed_cells(const std::vector<glm::vec3>& seeds, std::vector<glm::ivec2>& outSeedCells);
+    void addSeedsFromBlocks(const std::vector<BuildingBounds>& bounds);
+    void addSeedToGrid(float worldX, float worldZ);
+
     std::vector<glm::ivec2> find_path_astar(const glm::ivec2& start, const glm::ivec2& goal);
     void rasterize_paths_to_roads(const std::vector<std::vector<glm::ivec2>>& paths);
     void create_meshes_from_roads(float road_width = 3.0f);
-
-    //Helper push quad vertices for a single segment (world-space)
     void push_road_segment_geom(std::vector<glm::vec3>& verts, std::vector<GLuint>& inds, const glm::vec3& a, const glm::vec3& b, float width);
+
+    //New high-level road generation
+    void build_connected_roads(const std::vector<glm::ivec2>& all_seeds);
+    std::vector<glm::ivec2> generate_backbone_seeds(const std::vector<glm::ivec2>& building_seeds, int edge_count = 4, int farthest_count = 8);
+    std::vector<MSTEdge> build_backbone_mst(const std::vector<glm::ivec2>& backbone);
+    void connect_remaining_seeds(const std::vector<glm::ivec2>& all_seeds, const std::vector<glm::ivec2>& backbone);
+    bool RoadNetwork::edge_intersects_building(const glm::ivec2& a, const glm::ivec2& b);
 };
